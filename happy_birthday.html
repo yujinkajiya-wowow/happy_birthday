@@ -1,5 +1,12 @@
-<div id="stage" style="position:relative;overflow:hidden;min-height:520px;background:#000;border-radius:12px;padding:20px 0;">
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>誕生日おめでとう</title>
 <style>
+body{margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+#stage{position:relative;overflow:hidden;min-height:520px;width:100%;max-width:700px;background:#000;border-radius:12px;padding:20px 0;}
 @keyframes rainbow{0%{color:#ff0055}16%{color:#ff9500}33%{color:#ffee00}50%{color:#22ff00}66%{color:#00d9ff}83%{color:#9d00ff}100%{color:#ff0055}}
 @keyframes shake{0%,100%{transform:translate(0,0) rotate(0deg)}10%{transform:translate(-6px,4px) rotate(-2deg)}20%{transform:translate(5px,-5px) rotate(2deg)}30%{transform:translate(-4px,3px) rotate(-1deg)}40%{transform:translate(6px,-2px) rotate(1deg)}50%{transform:translate(-3px,5px) rotate(-2deg)}60%{transform:translate(4px,-4px) rotate(2deg)}70%{transform:translate(-5px,2px) rotate(-1deg)}80%{transform:translate(3px,-3px) rotate(1deg)}90%{transform:translate(-2px,4px) rotate(-1deg)}}
 @keyframes zoom{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
@@ -14,6 +21,9 @@
 .btn{display:block;margin:24px auto 0;padding:18px 36px;font-size:22px;font-weight:900;color:#000;background:#fff;border:6px solid #000;border-radius:50px;cursor:pointer;animation:zoom 0.4s infinite,bgflash 1s linear infinite;box-shadow:0 0 30px rgba(255,255,255,0.8);font-family:sans-serif;}
 .msg{text-align:center;color:#fff;font-size:16px;margin-top:14px;font-family:sans-serif;min-height:24px;font-weight:700;}
 </style>
+</head>
+<body>
+<div id="stage">
 <h2 style="position:absolute;left:-9999px;">画面が激しく点滅・振動する誕生日祝いページ。中央のケーキをクリックすると絵文字が舞い上がる。</h2>
 <div id="blobwrap" style="position:absolute;inset:0;pointer-events:none;"></div>
 <span class="cake" id="cake">🎂</span>
@@ -51,3 +61,5 @@ document.getElementById('msg').textContent=msgs[count%msgs.length];
 document.getElementById('stage').style.animation='shake 0.15s infinite';
 };
 </script>
+</body>
+</html>
