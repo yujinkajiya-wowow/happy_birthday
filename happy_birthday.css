@@ -129,9 +129,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .user { display: flex; align-items: center; gap: 12px; padding: 4px; border-radius: 999px; min-width: 0; }
 .avatar {
   width: 34px; height: 34px; border-radius: 50%; flex: none;
-  background: #1b8a6b; color: #fff; display: inline-flex; align-items: center; justify-content: center;
-  font-size: 16px; font-weight: 500;
+  background: #d3e3fd; color: #5e88c8; display: inline-flex; align-items: center; justify-content: center;
+  overflow: hidden;
 }
+.avatar svg { width: 100%; height: 100%; }
 .user-name { font-size: 16px; letter-spacing: .01em; white-space: nowrap; }
 
 /* 折りたたみ時 */
