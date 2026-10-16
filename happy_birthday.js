@@ -8,18 +8,9 @@
     { id: 'fast', label: '高速モード', desc: 'すばやく回答', model: 'gemini-flash-lite-latest' },
     { id: 'pro', label: '思考モード', desc: '複雑な問題をじっくり考えて回答', model: 'gemini-pro-latest' },
   ];
-  const NOTEBOOKS = [
-    'ミャクミャク人気化の認知戦的考察',
-    'The Harmonic Architecture of Modern Music',
-    'The Social Outcast’s Survival Guide',
-  ];
-  const SEED_CHATS = [
-    ['Python', true], ['Idioms', true],
-    ['Safari風ブラウザの主な選択肢'], ['多様化するAIの種類と特徴'], ['突然の挨拶と気遣い'],
-    ['劇のテーマ決めのアイデア提案'], ['おすすめの.gitignoreの選び方'], ['父島の切り抜き画像生成'],
-    ['父島のみのイラスト生成'], ['島の画像から文字と線を消去'], ['ポップなタイトルのレイアウト生成'],
-    ['画像の横長拡張リクエスト'], ['猛暑で汗を垂らす文字の描写'],
-  ];
+  // 混雑・上限エラーのときに順番に試すモデル
+  const FALLBACK_MODELS = ['gemini-2.5-flash', 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite'];
+  const RETRYABLE = new Set([429, 500, 503, 504]);
 
   // ============ ストレージ（失敗しても動くように） ============
   const store = {
@@ -32,18 +23,17 @@
   let apiKey = store.get('hb_apikey', '');
   let customModel = store.get('hb_custom_model', '');
   let modeId = store.get('hb_mode', 'auto');
-  let chats = store.get('hb_chats', null);
+  let chats = store.get('hb_chats', []);
   let currentId = null;
   let pendingFiles = [];
   let controller = null;
   let pinnedOnly = false;
   let searchQuery = '';
 
-  if (!Array.isArray(chats)) {
-    const now = Date.now();
-    chats = SEED_CHATS.map(([title, pinned], i) => ({
-      id: 'seed' + i, title, pinned: !!pinned, messages: [], updated: now - i * 60000,
-    }));
+  if (!Array.isArray(chats)) chats = [];
+  // 以前の版で入れていたダミーのチャット（中身なし）を掃除
+  if (chats.some(c => String(c.id).startsWith('seed') && !c.messages.length)) {
+    chats = chats.filter(c => !(String(c.id).startsWith('seed') && !c.messages.length));
     saveChats();
   }
 
@@ -78,25 +68,13 @@
   }
 
   // ============ サイドバー ============
-  function renderNotebooks() {
-    $('notebookList').innerHTML = '';
-    NOTEBOOKS.forEach(name => {
-      const b = document.createElement('button');
-      b.className = 'nav-item notebook';
-      b.innerHTML = '<svg viewBox="0 0 24 24" class="svg-ic"><g fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5.5" y="3.5" width="13" height="17" rx="3"/><path d="M9 3.5v17"/></g></svg><span class="label"></span>';
-      b.querySelector('.label').textContent = name;
-      b.onclick = () => toast('ノートブックはこの擬似 Gemini では開けません');
-      $('notebookList').appendChild(b);
-    });
-  }
-
   function renderChatList() {
     chatListEl.innerHTML = '';
     let list = [...chats].sort((a, b) => (b.pinned - a.pinned) || (b.updated - a.updated));
     if (pinnedOnly) list = list.filter(c => c.pinned);
     if (searchQuery) list = list.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()));
     if (!list.length) {
-      chatListEl.innerHTML = '<div class="chat-empty">チャットがありません</div>';
+      if (pinnedOnly || searchQuery) chatListEl.innerHTML = '<div class="chat-empty">該当するチャットがありません</div>';
       return;
     }
     list.forEach(c => {
@@ -456,14 +434,21 @@
       if (nearBottom) threadEl.scrollTop = threadEl.scrollHeight;
     };
 
-    try {
-      const res = await fetch(`${API_BASE}/models/${encodeURIComponent(curModel())}:streamGenerateContent?alt=sse`, {
+    const setStatus = (msg) => {
+      if (full) return;
+      content.innerHTML = `<div class="thinking">${SPARK_SVG}<span></span></div>`;
+      content.querySelector('.thinking span').textContent = msg;
+    };
+
+    // 1回分のストリーミング。途中で文字が出た後のエラーはそのまま投げる
+    const streamOnce = async (model) => {
+      const res = await fetch(`${API_BASE}/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
         body: JSON.stringify({ contents }),
         signal: controller.signal,
       });
-      if (!res.ok) throw await apiError(res);
+      if (!res.ok) throw await apiError(res, model);
 
       const reader = res.body.getReader();
       const dec = new TextDecoder();
@@ -481,31 +466,80 @@
           if (!json) continue;
           let data;
           try { data = JSON.parse(json); } catch { continue; }
-          if (data.error) throw new Error(data.error.message || 'エラーが発生しました');
+          if (data.error) {
+            const e = new Error(data.error.message || 'エラーが発生しました');
+            e.status = data.error.code;
+            e.retryable = RETRYABLE.has(data.error.code);
+            throw e;
+          }
           const cand = data.candidates && data.candidates[0];
           const parts = cand && cand.content && cand.content.parts || [];
           parts.forEach(p => { if (p.text && !p.thought) full += p.text; });
           if (data.promptFeedback && data.promptFeedback.blockReason && !full) {
             full = 'このリクエストにはお答えできません。（' + data.promptFeedback.blockReason + '）';
           }
-          if (!rafPending) { rafPending = true; requestAnimationFrame(paint); }
+          if (!rafPending && full) { rafPending = true; requestAnimationFrame(paint); }
         }
       }
+    };
+
+    // 混雑時は少し待って再試行 → それでもダメなら別モデルへ
+    const first = curModel();
+    const models = [first, ...FALLBACK_MODELS.filter(m => m !== first)];
+    const plan = [];
+    models.forEach((m, i) => { plan.push({ model: m, wait: 0 }); if (i === 0) plan.push({ model: m, wait: 1500 }); });
+
+    let usedModel = first;
+    let errLink = null;
+    try {
+      let lastErr;
+      for (const step of plan) {
+        if (step.model !== first) setStatus(`混雑中のため ${step.model} で再試行しています…`);
+        else if (step.wait) setStatus('混雑しているので再試行しています…');
+        if (step.wait) await sleep(step.wait, controller.signal);
+        try {
+          usedModel = step.model;
+          await streamOnce(step.model);
+          lastErr = null;
+          break;
+        } catch (err) {
+          lastErr = err;
+          // 中断・文字が出た後・再試行しても意味がないエラーはここで終わり
+          if (err.name === 'AbortError' || full || !(err.retryable || (err.status === 404 && step.model !== first))) throw err;
+        }
+      }
+      if (lastErr) throw lastErr;
       if (!full) full = '（回答がありませんでした）';
+      if (usedModel !== first) toast(`混雑していたため ${usedModel} で回答しました`);
     } catch (err) {
       if (err.name === 'AbortError') {
         if (!full) full = '回答を停止しました。';
       } else {
         content.classList.add('error');
-        full = (full ? full + '\n\n' : '') + '⚠️ ' + (err.message || String(err));
-        if (err.keyProblem) full += '\n\n[API キーを入力し直す](#key)';
+        let m = err.message || String(err);
+        if (err.retryable) m = 'どのモデルも混雑していて回答できませんでした。少し時間をおいて再試行してください。\n\n' + m;
+        full = (full ? full + '\n\n' : '') + '⚠️ ' + m;
+        errLink = err.keyProblem ? 'key' : 'retry';
       }
     }
 
     controller = null;
     content.innerHTML = md(full);
-    const keyLink = content.querySelector('a[href="#key"]');
-    if (keyLink) keyLink.onclick = (e) => { e.preventDefault(); showKeyModal(true); };
+    if (errLink) {
+      const a = document.createElement('a');
+      a.href = '#';
+      a.textContent = errLink === 'key' ? 'API キーを入力し直す' : 'もう一度試す';
+      a.onclick = (e) => {
+        e.preventDefault();
+        if (errLink === 'key') return showKeyModal(true);
+        if (controller) return;
+        wrap.remove();
+        generate(c, threadInner.lastElementChild);
+      };
+      const para = document.createElement('p');
+      para.appendChild(a);
+      content.appendChild(para);
+    }
     wrap.classList.remove('streaming');
     if (!content.classList.contains('error')) {
       c.messages.push({ role: 'model', text: full });
@@ -519,15 +553,23 @@
     updateActionBtn();
   }
 
-  async function apiError(res) {
+  async function apiError(res, model) {
     let msg = `HTTP ${res.status}`;
     try { const j = await res.json(); if (j.error && j.error.message) msg = j.error.message; } catch { }
     const e = new Error(msg);
+    e.status = res.status;
+    e.retryable = RETRYABLE.has(res.status);
     if (res.status === 400 && /api key/i.test(msg)) e.keyProblem = true;
     if (res.status === 401 || res.status === 403) e.keyProblem = true;
-    if (res.status === 404) e.message = `モデル「${curModel()}」が見つかりませんでした。設定（歯車）の詳細設定でモデル ID を指定してください。\n\n${msg}`;
-    if (res.status === 429) e.message = `リクエストが多すぎます。少し待ってから再度お試しください。\n\n${msg}`;
+    if (res.status === 404) e.message = `モデル「${model}」が見つかりませんでした。設定（歯車）の詳細設定でモデル ID を指定してください。\n\n${msg}`;
     return e;
+  }
+
+  function sleep(ms, signal) {
+    return new Promise((ok, ng) => {
+      const t = setTimeout(ok, ms);
+      signal && signal.addEventListener('abort', () => { clearTimeout(t); ng(new DOMException('aborted', 'AbortError')); }, { once: true });
+    });
   }
 
   function abortStream() { if (controller) controller.abort(); }
@@ -714,7 +756,6 @@
 
   // ============ 起動 ============
   if (store.get('hb_collapsed', false) && innerWidth > 900) app.classList.add('collapsed');
-  renderNotebooks();
   renderChatList();
   renderModelLabel();
   updateNavActive();
