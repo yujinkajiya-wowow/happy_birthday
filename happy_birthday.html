@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gemini</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%233186ff' d='M12 24A14.3 14.3 0 0 0 0 12 14.3 14.3 0 0 0 12 0a14.3 14.3 0 0 0 12 12 14.3 14.3 0 0 0-12 12'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..400,0..1,0&display=block">
+  <link rel="stylesheet" href="happy_birthday.css">
+</head>
+<body>
+  <!-- Gemini スパークのグラデーション定義（全体で共有） -->
+  <svg class="defs" aria-hidden="true" width="0" height="0">
+    <defs>
+      <path id="spark-path" d="M12 24A14.3 14.3 0 0 0 0 12 14.3 14.3 0 0 0 12 0a14.3 14.3 0 0 0 12 12 14.3 14.3 0 0 0-12 12"/>
+      <radialGradient id="g-red" cx="9" cy="1" r="11" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#ff4641"/><stop offset=".55" stop-color="#ff4641" stop-opacity=".55"/><stop offset="1" stop-color="#ff4641" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="g-yellow" cx="0" cy="12" r="9" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#ffd314"/><stop offset=".6" stop-color="#ffd314" stop-opacity=".5"/><stop offset="1" stop-color="#ffd314" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="g-green" cx="12" cy="24" r="11" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#00b95c"/><stop offset=".55" stop-color="#00b95c" stop-opacity=".6"/><stop offset="1" stop-color="#00b95c" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+  </svg>
+
+  <div class="app" id="app">
+    <!-- ===== サイドバー ===== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-head">
+        <a class="brand" href="#" id="brandLink">
+          <svg class="spark" viewBox="0 0 24 24"><use href="#spark-path" fill="#3186ff"/><use href="#spark-path" fill="url(#g-red)"/><use href="#spark-path" fill="url(#g-yellow)"/><use href="#spark-path" fill="url(#g-green)"/></svg>
+          <span class="brand-text">Gemini</span>
+        </a>
+        <div class="sb-head-actions">
+          <button class="icon-btn" id="searchBtn" title="チャットを検索"><span class="ms">search</span></button>
+          <button class="icon-btn" id="collapseBtn" title="サイドバーを閉じる">
+            <svg viewBox="0 0 24 24" class="svg-ic"><rect x="4" y="4.5" width="16" height="15" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M9 4.5v15" stroke="currentColor" stroke-width="1.4"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="sb-search" id="sbSearch" hidden>
+        <span class="ms">search</span>
+        <input type="text" id="searchInput" placeholder="チャットを検索">
+      </div>
+
+      <div class="sb-scroll">
+        <nav class="sb-nav">
+          <button class="nav-item" id="newChatBtn">
+            <span class="ms">edit_square</span><span class="label">チャットを新規作成</span>
+          </button>
+          <button class="nav-item" data-soon="ライブラリ">
+            <svg viewBox="0 0 24 24" class="svg-ic"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7.5" cy="7.5" r="3"/><circle cx="16.5" cy="7.5" r="3"/><circle cx="7.5" cy="16.5" r="3"/><circle cx="16.5" cy="16.5" r="3"/></g></svg>
+            <span class="label">ライブラリ</span>
+          </button>
+          <button class="nav-item" data-soon="画像">
+            <svg viewBox="0 0 24 24" class="svg-ic"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3.8" y="3.8" width="16.4" height="16.4" rx="5"/><path d="M7.5 15.5c2.2-.3 3.6-1.6 4.3-3.6.8-2.3 2.2-3.6 4.7-3.9"/><path d="M8.5 9.2c1.2 0 2 .7 2.2 1.8M13.3 15.8c.9.2 1.9 0 2.7-.6"/></g></svg>
+            <span class="label">画像</span>
+          </button>
+          <button class="nav-item" data-soon="スケジュール設定済み">
+            <span class="ms">schedule</span><span class="label">スケジュール設定済み</span>
+          </button>
+          <button class="nav-item" data-soon="カスタマイズ">
+            <svg viewBox="0 0 24 24" class="svg-ic"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3.2l7.6 4.4v8.8L12 20.8l-7.6-4.4V7.6z" stroke-linejoin="round"/><circle cx="12" cy="12" r="3"/></g></svg>
+            <span class="label">カスタマイズ</span><span class="chip">新規</span>
+          </button>
+        </nav>
+
+        <div class="sb-section">
+          <div class="sb-section-title">ノートブック</div>
+          <button class="nav-item" data-soon="ノートブック">
+            <span class="ms">add</span><span class="label">ノートブックを新規作成</span>
+          </button>
+          <div id="notebookList"></div>
+        </div>
+
+        <div class="sb-section">
+          <div class="sb-section-title row">
+            <span>すべて</span>
+            <button class="icon-btn small" id="filterBtn" title="固定したチャットのみ"><span class="ms">filter_alt</span></button>
+          </div>
+          <div id="chatList" class="chat-list"></div>
+        </div>
+      </div>
+
+      <div class="sb-foot">
+        <button class="user" id="userBtn">
+          <span class="avatar">Y</span>
+          <span class="label user-name">Yujin Kajiya</span>
+        </button>
+        <button class="icon-btn" id="settingsBtn" title="設定"><span class="ms">settings</span></button>
+      </div>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+
+    <!-- ===== メイン ===== -->
+    <main class="main is-home" id="main">
+      <div class="glow" aria-hidden="true"></div>
+
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn mobile-only" id="menuBtn" title="メニュー"><span class="ms">menu</span></button>
+          <span class="mobile-only topbar-title">Gemini</span>
+        </div>
+        <div class="topbar-right">
+          <button class="pill pill-gray home-only" id="downloadBtn"><span class="ms">download</span><span>アプリをダウンロード</span></button>
+          <button class="pill pill-blue" id="upgradeBtn">
+            <svg viewBox="0 0 24 24" class="upgrade-spark"><use href="#spark-path" fill="currentColor"/></svg>
+            <span>アップグレード</span>
+          </button>
+          <button class="icon-btn home-only" id="tempChatBtn" title="一時チャット">
+            <svg viewBox="0 0 24 24" class="svg-ic"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5" stroke-dasharray="2.2 2.6"/><path d="M13.5 13.8l-3 .7.7-3 6.9-6.9a1.6 1.6 0 0 1 2.3 2.3z" stroke-linejoin="round"/></g></svg>
+          </button>
+          <button class="icon-btn chat-only" id="chatMenuBtn" title="その他"><span class="ms">more_vert</span></button>
+        </div>
+      </header>
+
+      <section class="stage" id="stage">
+        <div class="thread" id="thread"><div class="thread-inner" id="threadInner"></div></div>
+
+        <h1 class="hero" id="hero">何から始めますか？</h1>
+
+        <div class="composer-wrap">
+          <div class="attachments" id="attachments"></div>
+          <form class="composer" id="composer" autocomplete="off">
+            <button type="button" class="icon-btn composer-add" id="addBtn" title="ファイルを追加"><span class="ms">add</span></button>
+            <input type="file" id="fileInput" accept="image/*,application/pdf" multiple hidden>
+            <textarea id="prompt" rows="1" placeholder="Gemini に相談"></textarea>
+            <button type="button" class="model-btn" id="modelBtn">
+              <span class="model-gemini">Gemini</span> <span class="model-mode" id="modelMode">自動モード</span>
+              <span class="ms">keyboard_arrow_down</span>
+            </button>
+            <button type="button" class="icon-btn action-btn" id="actionBtn" title="マイク"><span class="ms" id="actionIcon">mic</span></button>
+          </form>
+          <p class="disclaimer">Gemini は AI であり、不正確な情報を表示することがあります。</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- モデル選択メニュー -->
+  <div class="menu" id="modelMenu" hidden></div>
+  <!-- 汎用ポップアップメニュー -->
+  <div class="menu" id="popMenu" hidden></div>
+
+  <!-- APIキー入力 -->
+  <div class="modal-back" id="keyModal">
+    <div class="modal" role="dialog" aria-labelledby="keyTitle">
+      <svg class="spark modal-spark" viewBox="0 0 24 24"><use href="#spark-path" fill="#3186ff"/><use href="#spark-path" fill="url(#g-red)"/><use href="#spark-path" fill="url(#g-yellow)"/><use href="#spark-path" fill="url(#g-green)"/></svg>
+      <h2 id="keyTitle">Gemini API キーを入力</h2>
+      <p class="modal-sub">キーはこのブラウザから Google の API に直接送られるだけで、他には送信されません。
+        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio でキーを取得</a></p>
+      <form id="keyForm">
+        <div class="field">
+          <input type="password" id="keyInput" placeholder=" " autocomplete="off" spellcheck="false">
+          <label for="keyInput">API キー</label>
+          <button type="button" class="icon-btn small eye" id="eyeBtn" title="表示切り替え"><span class="ms">visibility</span></button>
+        </div>
+        <details class="adv">
+          <summary>詳細設定</summary>
+          <div class="field">
+            <input type="text" id="customModel" placeholder=" " spellcheck="false">
+            <label for="customModel">カスタムモデル ID（任意・例: gemini-2.5-flash）</label>
+          </div>
+        </details>
+        <label class="check"><input type="checkbox" id="rememberKey"> このブラウザにキーを保存する</label>
+        <p class="modal-err" id="keyErr"></p>
+        <div class="modal-actions">
+          <button type="button" class="btn-text" id="keyCancel" hidden>キャンセル</button>
+          <button type="submit" class="btn-filled" id="keySubmit">開始</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+  <script src="happy_birthday.js"></script>
+</body>
+</html>
