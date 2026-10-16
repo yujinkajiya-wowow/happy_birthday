@@ -665,6 +665,8 @@
     keyInput.value = apiKey || '';
     $('customModel').value = customModel || '';
     $('rememberKey').checked = !!store.get('hb_apikey', '');
+    // 初めての人には作り方を開いた状態で見せる
+    $('howto').open = !apiKey;
     $('keyCancel').hidden = !cancellable;
     keyErr.textContent = '';
     keyModal.hidden = false;

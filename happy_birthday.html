@@ -152,8 +152,17 @@
     <div class="modal" role="dialog" aria-labelledby="keyTitle">
       <svg class="spark modal-spark" viewBox="0 0 24 24"><use href="#spark-path" fill="#3186ff"/><use href="#spark-path" fill="url(#g-red)"/><use href="#spark-path" fill="url(#g-yellow)"/><use href="#spark-path" fill="url(#g-green)"/></svg>
       <h2 id="keyTitle">Gemini API キーを入力</h2>
-      <p class="modal-sub">キーはこのブラウザから Google の API に直接送られるだけで、他には送信されません。
-        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio でキーを取得</a></p>
+      <p class="modal-sub">キーはこのブラウザから Google の API に直接送られるだけで、他には送信されません。</p>
+      <details class="howto" id="howto">
+        <summary><span class="ms">help</span>API キーの作り方（無料・1 分）<span class="ms chev">expand_more</span></summary>
+        <ol>
+          <li><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio の API キーページ</a>を開いて、Google アカウントでログイン</li>
+          <li>初めてなら利用規約に同意する</li>
+          <li>「API キーを作成」（Create API key）を押す</li>
+          <li>表示された <code>AIza</code> で始まるキーをコピーして、下の欄に貼り付ける</li>
+        </ol>
+        <p class="howto-note">無料で使えます（使える回数に上限あり）。キーは自分専用なので、人には教えないでください。無料枠で送った内容は、Google がサービス改善に使うことがあります。</p>
+      </details>
       <form id="keyForm">
         <div class="field">
           <input type="password" id="keyInput" placeholder=" " autocomplete="off" spellcheck="false">

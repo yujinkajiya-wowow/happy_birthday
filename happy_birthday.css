@@ -317,11 +317,11 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .modal-back {
   position: fixed; inset: 0; z-index: 100;
   background: rgba(240, 244, 249, .72); backdrop-filter: blur(6px);
-  display: flex; align-items: center; justify-content: center; padding: 16px;
+  display: flex; align-items: flex-start; justify-content: center; padding: 16px; overflow-y: auto;
 }
 .modal-back[hidden] { display: none; }
 .modal {
-  width: 100%; max-width: 460px; background: #fff; border-radius: 28px;
+  width: 100%; max-width: 460px; margin: auto; background: #fff; border-radius: 28px;
   padding: 36px 32px 28px; box-shadow: 0 12px 48px rgba(0,0,0,.14);
   animation: pop .25s ease;
 }
@@ -331,6 +331,17 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .modal-sub { font-size: 14px; line-height: 1.75; color: var(--text-2); margin: 0 0 24px; letter-spacing: .04em; }
 .modal-sub a { color: var(--link); text-decoration: none; display: inline-block; margin-top: 4px; }
 .modal-sub a:hover { text-decoration: underline; }
+.howto { background: #f0f4f9; border-radius: 16px; margin: -8px 0 22px; font-size: 13.5px; color: var(--text-2); letter-spacing: .03em; }
+.howto summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 12px 14px; color: var(--text); font-size: 14px; }
+.howto summary::-webkit-details-marker { display: none; }
+.howto summary .ms { font-size: 20px; color: #0b57d0; }
+.howto summary .chev { margin-left: auto; color: var(--text-2); transition: transform .2s; }
+.howto[open] summary .chev { transform: rotate(180deg); }
+.howto ol { margin: 0; padding: 0 16px 0 36px; line-height: 1.8; }
+.howto li { margin-bottom: 4px; }
+.howto a { color: var(--link); }
+.howto code { background: #e1e7ef; border-radius: 4px; padding: 1px 5px; font-size: 12.5px; }
+.howto-note { margin: 8px 14px 0; padding: 10px 0 12px; border-top: 1px solid #dde3ea; font-size: 12.5px; line-height: 1.7; color: var(--text-3); }
 .field { position: relative; margin-bottom: 16px; }
 .field input {
   width: 100%; height: 56px; border: 1px solid #747775; border-radius: 12px;
